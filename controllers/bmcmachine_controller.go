@@ -40,8 +40,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	bmcv1 "github.com/phoenixnap/cluster-api-provider-bmc/api/v1beta1"
 	"github.com/pkg/errors"
+	bmcv1 "github.com/pnap/cluster-api-provider-bmc/api/v1beta1"
 )
 
 // BMCMachineReconciler reconciles a BMCMachine object
@@ -249,7 +249,7 @@ func (r *BMCMachineReconciler) reconcileCreate(ctx context.Context, mc *MachineC
 		request.NetworkConfiguration = NetworkConfiguration{
 			IPBlocksConfiguration: IPBlocksConfiguration{
 				ConfigurationType: `USER_DEFINED`,
-				IPBlocks:          []IPBlock{IPBlock{ID: ipid}},
+				IPBlocks:          []IPBlock{{ID: ipid}},
 			},
 		}
 	}
@@ -408,7 +408,10 @@ func (r *BMCMachineReconciler) reconcileSynchronize(ctx context.Context, mc *Mac
 		mc.MergeBMCStatusProperties(ss)
 		switch mc.GetBMCStatus() {
 		case StatusPoweredOn:
-			mc.SetReady()
+			{
+				mc.SetReady()
+				mc.SetNodeRef()
+			}
 		case StatusError:
 			mc.SetIrreconcilable(capierrors.CreateMachineError, `unrecoverable error while creating the resource at BMC`)
 		}

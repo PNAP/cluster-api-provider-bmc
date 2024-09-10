@@ -98,6 +98,7 @@ type ServerOS string
 const (
 	UbuntuBionic ServerOS = `ubuntu/bionic`
 	UbuntuFocal  ServerOS = `ubuntu/focal`
+	UbuntuJammy  ServerOS = `ubuntu/jammy`
 )
 
 // ServerType describes the hardware to allocate for this server.
@@ -191,6 +192,9 @@ type BMCMachineStatus struct {
 	Addresses      []corev1.NodeAddress       `json:"addresses,omitempty"`
 	FailureReason  *errors.MachineStatusError `json:"failureReason,omitempty"`
 	FailureMessage *string                    `json:"failureMessage,omitempty"`
+	// NodeRef is a reference to the corresponding workload cluster Node if it exists.
+	// +optional
+	NodeRef *corev1.ObjectReference `json:"nodeRef,omitempty"`
 }
 
 //+kubebuilder:object:root=true

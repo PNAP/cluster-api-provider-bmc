@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	bmcv1 "github.com/phoenixnap/cluster-api-provider-bmc/api/v1beta1"
 	"github.com/pkg/errors"
+	bmcv1 "github.com/pnap/cluster-api-provider-bmc/api/v1beta1"
 )
 
 type MachineContext struct {
@@ -118,6 +118,20 @@ func (mc *MachineContext) MergeBMCStatusProperties(s bmcv1.BMCMachineStatus) {
 
 func (mc *MachineContext) SetBMCStatus(s string) {
 	mc.BMCMachine.Status.BMCStatus = string(s)
+}
+func (mc *MachineContext) SetNodeRef() {
+	nodeUid := types.UID(mc.BMCMachine.Status.BMCServerID)
+
+	if mc.BMCMachine.Status.NodeRef == nil {
+		mc.BMCMachine.Status.NodeRef = &corev1.ObjectReference{
+			APIVersion: corev1.SchemeGroupVersion.String(),
+			Kind:       "Node",
+			Name:       mc.GetHostname(),
+			UID:        nodeUid,
+		}
+		//log.Info("Infrastructure provider reporting spec.providerID, Kubernetes node is now available", machine.Spec.InfrastructureRef.Kind, klog.KRef(machine.Spec.InfrastructureRef.Namespace, machine.Spec.InfrastructureRef.Name), "providerID", *machine.Spec.ProviderID, "Node", klog.KRef("", machine.Status.NodeRef.Name))
+		//r.recorder.Event(machine, corev1.EventTypeNormal, "SuccessfulSetNodeRef", machine.Status.NodeRef.Name)
+	}
 }
 
 func (mc *MachineContext) GetBMCStatus() string {

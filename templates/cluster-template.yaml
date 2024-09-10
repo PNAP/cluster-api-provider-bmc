@@ -86,7 +86,7 @@ spec:
   template:
     spec:
       location: "${BMC_LOCATION}"
-      os: "ubuntu/focal"
+      os: "ubuntu/jammy"
       type: "${BMC_CONTROL_PLANE_MACHINE_TYPE}"
       installDefaultSshKeys: true
 ---
@@ -121,7 +121,7 @@ spec:
   template:
     spec:
       location: "${BMC_LOCATION}"
-      os: "ubuntu/focal"
+      os: "ubuntu/jammy"
       type: "${BMC_NODE_TYPE}"
       installDefaultSshKeys: true
 ---

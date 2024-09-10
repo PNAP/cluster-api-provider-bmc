@@ -73,6 +73,7 @@ spec:
                 enum:
                 - ubuntu/bionic
                 - ubuntu/focal
+                - ubuntu/jammy
                 type: string
               providerID:
                 description: To be set after the BMC server is created. Required by
