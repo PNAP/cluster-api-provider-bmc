@@ -131,6 +131,7 @@ func (mc *MachineContext) SetNodeRef() {
 		}
 		//log.Info("Infrastructure provider reporting spec.providerID, Kubernetes node is now available", machine.Spec.InfrastructureRef.Kind, klog.KRef(machine.Spec.InfrastructureRef.Namespace, machine.Spec.InfrastructureRef.Name), "providerID", *machine.Spec.ProviderID, "Node", klog.KRef("", machine.Status.NodeRef.Name))
 		//r.recorder.Event(machine, corev1.EventTypeNormal, "SuccessfulSetNodeRef", machine.Status.NodeRef.Name)
+		mc.Event(`Normal`, "SuccessfulSetNodeRef", mc.BMCMachine.Status.NodeRef.Name)
 	}
 }
 
