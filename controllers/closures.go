@@ -133,6 +133,15 @@ func (mc *MachineContext) SetNodeRef() {
 		//r.recorder.Event(machine, corev1.EventTypeNormal, "SuccessfulSetNodeRef", machine.Status.NodeRef.Name)
 		mc.Event(`Normal`, "SuccessfulSetNodeRef", mc.BMCMachine.Status.NodeRef.Name)
 	}
+	if mc.Machine.Status.NodeRef == nil {
+		mc.Machine.Status.NodeRef = &corev1.ObjectReference{
+			APIVersion: corev1.SchemeGroupVersion.String(),
+			Kind:       "Node",
+			Name:       mc.GetHostname(),
+			UID:        nodeUid,
+		}
+		mc.Event(`Normal`, "SuccessfulSetNodeRef-Machine", mc.BMCMachine.Status.NodeRef.Name)
+	}
 }
 
 func (mc *MachineContext) GetBMCStatus() string {
