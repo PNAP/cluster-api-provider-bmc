@@ -73,7 +73,6 @@ spec:
                 enum:
                 - ubuntu/bionic
                 - ubuntu/focal
-                - ubuntu/jammy
                 type: string
               providerID:
                 description: To be set after the BMC server is created. Required by
@@ -180,16 +179,6 @@ spec:
                 type: string
               id:
                 type: string
-              privateIpAddresses:
-                items:
-                  type: string
-                type: array
-              publicIpAddresses:
-                items:
-                  type: string
-                type: array
-              ram:
-                type: string
               nodeRef:
                 description: NodeRef is a reference to the corresponding workload
                   cluster Node if it exists.
@@ -227,6 +216,16 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+              privateIpAddresses:
+                items:
+                  type: string
+                type: array
+              publicIpAddresses:
+                items:
+                  type: string
+                type: array
+              ram:
+                type: string
               ready:
                 description: Cluster API fields
                 type: boolean
