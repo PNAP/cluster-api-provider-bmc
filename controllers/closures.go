@@ -18,6 +18,7 @@ import (
 
 	"github.com/pkg/errors"
 	bmcv1 "github.com/pnap/cluster-api-provider-bmc/api/v1beta1"
+	"sigs.k8s.io/cluster-api/controllers/remote"
 )
 
 type MachineContext struct {
@@ -119,21 +120,54 @@ func (mc *MachineContext) MergeBMCStatusProperties(s bmcv1.BMCMachineStatus) {
 func (mc *MachineContext) SetBMCStatus(s string) {
 	mc.BMCMachine.Status.BMCStatus = string(s)
 }
-func (mc *MachineContext) SetNodeRef() {
-	nodeUid := types.UID(mc.BMCMachine.Status.BMCServerID)
+func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
+	//nodeUid := types.UID(mc.BMCMachine.Status.BMCServerID)
+
+	clusterKey := types.NamespacedName{
+		Namespace: mc.Cluster.Namespace,
+		Name:      mc.Cluster.Name,
+	}
+
+	var e error
+	var rClient client.Client
+	for i := 0; i < 10; i++ {
+		remoteClient, err := GetRemoteClient(ctx, cl, clusterKey)
+		if err != nil {
+			mc.Eventf(`Error`, "Controlplane endpoint not yet responding. Requeuing: %v", fmt.Sprintln(err), mc.Machine.Name)
+			e = err
+		} else {
+			rClient = remoteClient
+			break
+		}
+	}
+	if e != nil {
+		mc.Event(`Error`, "Controlplane endpoint not yet responding.", mc.Machine.Name)
+		return
+	}
+	// Retrieve the remote node
+	nodeName := mc.Machine.Name
+	node := &corev1.Node{}
+	nodeKey := types.NamespacedName{
+		Namespace: "",
+		Name:      nodeName,
+	}
+	if err := rClient.Get(ctx, nodeKey, node); err != nil {
+		mc.Eventf(`Error`, "Controlplane endpoint not yet responding. Requeuing: %v", fmt.Sprintln(err), mc.Machine.Name)
+		return
+	}
 
 	if mc.BMCMachine.Status.NodeRef == nil {
 		mc.BMCMachine.Status.NodeRef = &corev1.ObjectReference{
 			APIVersion: corev1.SchemeGroupVersion.String(),
 			Kind:       "Node",
-			Name:       mc.GetHostname(),
-			UID:        nodeUid,
+			Name:       node.Name,
+			UID:        node.UID,
 		}
 		//log.Info("Infrastructure provider reporting spec.providerID, Kubernetes node is now available", machine.Spec.InfrastructureRef.Kind, klog.KRef(machine.Spec.InfrastructureRef.Namespace, machine.Spec.InfrastructureRef.Name), "providerID", *machine.Spec.ProviderID, "Node", klog.KRef("", machine.Status.NodeRef.Name))
 		//r.recorder.Event(machine, corev1.EventTypeNormal, "SuccessfulSetNodeRef", machine.Status.NodeRef.Name)
 		mc.Event(`Normal`, "SuccessfulSetNodeRef", mc.BMCMachine.Status.NodeRef.Name)
 	}
-	if mc.Machine.Status.NodeRef == nil {
+	/* if mc.Machine.Status.NodeRef == nil {
 		mc.Machine.Status.NodeRef = &corev1.ObjectReference{
 			APIVersion: corev1.SchemeGroupVersion.String(),
 			Kind:       "Node",
@@ -141,7 +175,7 @@ func (mc *MachineContext) SetNodeRef() {
 			UID:        nodeUid,
 		}
 		mc.Event(`Normal`, "SuccessfulSetNodeRef-Machine", mc.BMCMachine.Status.NodeRef.Name)
-	}
+	} */
 }
 
 func (mc *MachineContext) GetBMCStatus() string {
@@ -269,4 +303,14 @@ func (cc *ClusterContext) SetReady() {
 
 func (cc *ClusterContext) IsReady() bool {
 	return cc.BMCCluster.Status.Ready
+}
+
+func GetRemoteClient(ctx context.Context, client client.Client, clusterKey client.ObjectKey) (client.Client, error) {
+
+	remoteClient, err := remote.NewClusterClient(ctx, "remote-cluster-cache", client, clusterKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return remoteClient, nil
 }

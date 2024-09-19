@@ -410,7 +410,7 @@ func (r *BMCMachineReconciler) reconcileSynchronize(ctx context.Context, mc *Mac
 		case StatusPoweredOn:
 			{
 				mc.SetReady()
-				mc.SetNodeRef()
+				mc.SetNodeRef(ctx, r.Client)
 			}
 		case StatusError:
 			mc.SetIrreconcilable(capierrors.CreateMachineError, `unrecoverable error while creating the resource at BMC`)
