@@ -133,7 +133,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 	for i := 0; i < 10; i++ {
 		remoteClient, err := GetRemoteClient(ctx, cl, clusterKey)
 		if err != nil {
-			mc.Eventf(`Error`, "Controlplane endpoint not yet responding. Requeuing: %v", fmt.Sprintln(err), mc.Machine.Name)
+			mc.Eventf(`Normal`, "Getting remote cleint failed. Requeuing: %v", fmt.Sprintln(err), mc.Machine.Name)
 			e = err
 		} else {
 			rClient = remoteClient
@@ -141,7 +141,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 		}
 	}
 	if e != nil {
-		mc.Event(`Error`, "Controlplane endpoint not yet responding.", mc.Machine.Name)
+		mc.Event(`Normal`, "Controlplane endpoint not yet responding.", mc.Machine.Name)
 		return
 	}
 	// Retrieve the remote node
@@ -152,7 +152,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 		Name:      nodeName,
 	}
 	if err := rClient.Get(ctx, nodeKey, node); err != nil {
-		mc.Eventf(`Error`, "Controlplane endpoint not yet responding. Requeuing: %v", fmt.Sprintln(err), mc.Machine.Name)
+		mc.Eventf(`Normal`, "Getting node failed.: %v", fmt.Sprintln(err), mc.Machine.Name)
 		return
 	}
 
