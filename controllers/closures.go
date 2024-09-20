@@ -123,14 +123,14 @@ func (mc *MachineContext) SetBMCStatus(s string) {
 func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 	//nodeUid := types.UID(mc.BMCMachine.Status.BMCServerID)
 
-	clusterKey := types.NamespacedName{
+	/* clusterKey := types.NamespacedName{
 		Namespace: mc.Cluster.Namespace,
 		Name:      mc.Cluster.Name,
 	}
-
-	var e error
-	var rClient client.Client
-	for i := 0; i < 10; i++ {
+	*/
+	//var e error
+	var rClient = mc.K8sClient
+	/* for i := 0; i < 10; i++ {
 		remoteClient, err := GetRemoteClient(ctx, cl, clusterKey)
 		if err != nil {
 			mc.Eventf(`Normal`, "Getting remote cleint failed. Requeuing: %v", fmt.Sprintln(err), mc.Machine.Name)
@@ -145,7 +145,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 		mc.Event(`Normal`, "Controlplane endpoint not yet responding.", mc.Machine.Name)
 		rClient = mc.K8sClient
 		//return
-	}
+	} */
 	// Retrieve the remote node
 	nodeName := mc.Machine.Name
 	node := &corev1.Node{}
