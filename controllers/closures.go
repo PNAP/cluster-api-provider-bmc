@@ -143,7 +143,8 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 	}
 	if e != nil {
 		mc.Event(`Normal`, "Controlplane endpoint not yet responding.", mc.Machine.Name)
-		return
+		rClient = mc.K8sClient
+		//return
 	}
 	// Retrieve the remote node
 	nodeName := mc.Machine.Name
