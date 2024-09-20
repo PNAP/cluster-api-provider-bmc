@@ -135,6 +135,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 		if err != nil {
 			mc.Eventf(`Normal`, "Getting remote cleint failed. Requeuing: %v", fmt.Sprintln(err), mc.Machine.Name)
 			e = err
+			rClient = mc.K8sClient
 		} else {
 			rClient = remoteClient
 			break
