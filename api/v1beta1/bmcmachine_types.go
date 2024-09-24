@@ -68,12 +68,13 @@ type BMCMachineSpec struct {
 // NetworkType represents the type of networking configuraiton a server should use.
 // Only one of the following network types may be specified.
 // If none of the following network types are specified, the default one is PublicAndPrivate.
-// +kubebuilder:validation:Enum=PUBLIC_AND_PRIVATE;PRIVATE_ONLY
+// +kubebuilder:validation:Enum=PUBLIC_AND_PRIVATE;PRIVATE_ONLY;USER_DEFINED
 type NetworkType string
 
 const (
 	PublicAndPrivate NetworkType = `PUBLIC_AND_PRIVATE`
 	PrivateOnly      NetworkType = `PRIVATE_ONLY`
+	UserDefined      NetworkType = `USER_DEFINED`
 )
 
 // LocationID identifies a BMC region.
