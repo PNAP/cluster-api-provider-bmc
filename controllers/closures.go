@@ -269,6 +269,10 @@ func (cc *ClusterContext) SetIP(ip string) {
 	cc.BMCCluster.Annotations[ANNOTATION_NAME_BMC_CLUSTER_IP] = ip
 }
 
+func (cc *ClusterContext) GetIP() string {
+	return cc.BMCCluster.Annotations[ANNOTATION_NAME_BMC_CLUSTER_IP]
+}
+
 func (cc ClusterContext) Event(eventtype, reason, message string) {
 	cc.Recorder.Event(cc.BMCCluster, eventtype, reason, message)
 }
