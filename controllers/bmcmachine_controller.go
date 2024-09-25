@@ -257,6 +257,7 @@ func (r *BMCMachineReconciler) reconcileCreate(ctx context.Context, mc *MachineC
 	}
 
 	createBody, err := json.Marshal(request)
+	log.Info("Request object is   **************" + string(createBody))
 	if err != nil {
 		return noRequeue, err
 	}
@@ -412,7 +413,7 @@ func (r *BMCMachineReconciler) reconcileSynchronize(ctx context.Context, mc *Mac
 		case StatusPoweredOn:
 			{
 				mc.SetReady()
-				mc.SetNodeRef(ctx, r.Client)
+				//mc.SetNodeRef(ctx, r.Client)
 			}
 		case StatusError:
 			mc.SetIrreconcilable(capierrors.CreateMachineError, `unrecoverable error while creating the resource at BMC`)
