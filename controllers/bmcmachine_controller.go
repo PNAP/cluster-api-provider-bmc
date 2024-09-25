@@ -246,6 +246,8 @@ func (r *BMCMachineReconciler) reconcileCreate(ctx context.Context, mc *MachineC
 			log.Info(`Cluster address block is not yet ready`)
 			return noRequeue, nil
 		}
+		var ii = true
+		request.InstallDefaultSSHKeys = &ii
 		request.NetworkConfiguration = NetworkConfiguration{
 			IPBlocksConfiguration: IPBlocksConfiguration{
 				ConfigurationType: `USER_DEFINED`,
@@ -526,7 +528,7 @@ type NetworkConfiguration struct {
 // IPBlocksConfiguration configurations of server
 type IPBlocksConfiguration struct {
 	ConfigurationType string    `json:"configurationType,omitempty"`
-	IPBlocks          []IPBlock `json:"ipBlocks"`
+	IPBlocks          []IPBlock `json:"ipBlocks,omitempty"`
 }
 
 // IPBlock configurations of server
