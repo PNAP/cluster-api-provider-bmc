@@ -138,80 +138,86 @@ func (r *BMCClusterReconciler) reconcileCreate(ctx context.Context, cc *ClusterC
 	log := ctrl.LoggerFrom(ctx)
 	log.Info(`Creating cluster`)
 
-	createBody, err := json.Marshal(IPBlockRequest{
-		CIDRBlockSize: `/31`,
-		Location:      string(cc.BMCCluster.Spec.Location),
-		Description:   fmt.Sprintf("CAPI cluster for BMC %s/%s", cc.BMCCluster.Namespace, cc.BMCCluster.Name),
-	})
-	if err != nil {
-		return noRequeue, err
-	}
+	allId := cc.GetIPAllocationID()
+	if len(allId) > 0 {
 
-	resp, err := cc.BMCClient.Post(fmt.Sprintf("%s/ips/v1/ip-blocks", r.BMCEndpointURL), `application/json`, bytes.NewBuffer(createBody))
-	if err != nil {
-		cc.Event(EventTypeWarning, EventReasonCreateError, err.Error())
-		return noRequeue, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		cc.Event(EventTypeWarning, EventReasonCreateError, err.Error())
-		return noRequeue, err
-	}
-
-	switch resp.StatusCode {
-	case 400, 401, 403:
-		// bad data, or controller/API incompatibility
-		// bad credentials
-		// unauthorized (also 404)
-		// everything fallingthrough into this block should not be requeued
-		log.Info(`Unable to reconcile`, `code`, resp.StatusCode, `body`, string(body))
-		if !cc.IsStatusEqual(StatusIrreconcilable) {
-			cc.Eventf(EventTypeWarning, EventReasonCreateErrorPermanent, "Code: %v", resp.StatusCode)
-			cc.SetBMCStatus(StatusIrreconcilable)
+		createBody, err := json.Marshal(IPBlockRequest{
+			CIDRBlockSize: `/31`,
+			Location:      string(cc.BMCCluster.Spec.Location),
+			Description:   fmt.Sprintf("CAPI cluster for BMC %s/%s", cc.BMCCluster.Namespace, cc.BMCCluster.Name),
+		})
+		if err != nil {
+			return noRequeue, err
 		}
-		return noRequeue, nil
-	case 500:
-		// temporarily unavailable, backoff and retry
-		log.Info(`BMC temporarily unavailable`)
-		cc.Eventf(EventTypeWarning, EventReasonCreateFailure, "Code: %v", resp.StatusCode)
-		return noRequeue, nil
-	case 200, 201, 202, 204:
-		// the call was successful, do nothing and continue reconciliation
-		log.Info(`ip-block successfully created`)
-	default:
-		cc.Eventf(EventTypeWarning, EventReasonCreateError, "Unexpected response from the API: %s", resp.StatusCode)
-		return noRequeue, fmt.Errorf("Unexpected response during server create: %v", resp.StatusCode)
+		log.Info("Request object FROM cluster controller is   **************" + string(createBody))
+		resp, err := cc.BMCClient.Post(fmt.Sprintf("%s/ips/v1/ip-blocks", r.BMCEndpointURL), `application/json`, bytes.NewBuffer(createBody))
+		if err != nil {
+			cc.Event(EventTypeWarning, EventReasonCreateError, err.Error())
+			return noRequeue, err
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			cc.Event(EventTypeWarning, EventReasonCreateError, err.Error())
+			return noRequeue, err
+		}
+
+		switch resp.StatusCode {
+		case 400, 401, 403:
+			// bad data, or controller/API incompatibility
+			// bad credentials
+			// unauthorized (also 404)
+			// everything fallingthrough into this block should not be requeued
+			log.Info(`Unable to reconcile`, `code`, resp.StatusCode, `body`, string(body))
+			if !cc.IsStatusEqual(StatusIrreconcilable) {
+				cc.Eventf(EventTypeWarning, EventReasonCreateErrorPermanent, "Code: %v", resp.StatusCode)
+				cc.SetBMCStatus(StatusIrreconcilable)
+			}
+			return noRequeue, nil
+		case 500:
+			// temporarily unavailable, backoff and retry
+			log.Info(`BMC temporarily unavailable`)
+			cc.Eventf(EventTypeWarning, EventReasonCreateFailure, "Code: %v", resp.StatusCode)
+			return noRequeue, nil
+		case 200, 201, 202, 204:
+			// the call was successful, do nothing and continue reconciliation
+			log.Info(`ip-block successfully created`)
+		default:
+			cc.Eventf(EventTypeWarning, EventReasonCreateError, "Unexpected response from the API: %s", resp.StatusCode)
+			return noRequeue, fmt.Errorf("Unexpected response during server create: %v", resp.StatusCode)
+		}
+
+		// Set the resulting IP Block response in the status and set annotation values appropriately.
+		var ips bmcv1.BMCClusterStatus
+		err = json.Unmarshal(body, &ips)
+		if err != nil {
+			cc.Event(EventTypeWarning, EventReasonCreateError, err.Error())
+			return noRequeue, err
+		}
+
+		log.Info(`Setting status to BMC response`, `Response`, string(body), `Parsed Status`, ips.ID)
+
+		cc.Eventf(EventTypeNormal, EventReasonCreated, "Created BMC IP-Block %s", ips.ID)
+		cc.SetStatus(ips)
+		log.Info("set ip allocation id is   **************" + ips.ID)
+		cc.SetIPAllocationID(ips.ID)
+
+		// This controller created an IP-block of size two, and the first address is reserved
+		// for broadcase. This makes the publicly assigned IP address knowable before a control
+		// plane machine is created.
+		addr := net.ParseIP(strings.TrimSuffix(ips.CIDR, `/31`))
+		addr[15] = addr[15] + 1
+		log.Info("set ip is   **************" + addr.String())
+		cc.SetIP(addr.String())
+
+		// set the control plane endpoint
+		// default port for the kube-apiserver is 6443
+		cc.SetControlPlaneEndpoint(addr.String(), 6443)
+
+		// mark the cluster ready
+		cc.SetReady()
 	}
-
-	// Set the resulting IP Block response in the status and set annotation values appropriately.
-	var ips bmcv1.BMCClusterStatus
-	err = json.Unmarshal(body, &ips)
-	if err != nil {
-		cc.Event(EventTypeWarning, EventReasonCreateError, err.Error())
-		return noRequeue, err
-	}
-
-	log.Info(`Setting status to BMC response`, `Response`, string(body), `Parsed Status`, ips.ID)
-
-	cc.Eventf(EventTypeNormal, EventReasonCreated, "Created BMC IP-Block %s", ips.ID)
-	cc.SetStatus(ips)
-	cc.SetIPAllocationID(ips.ID)
-
-	// This controller created an IP-block of size two, and the first address is reserved
-	// for broadcase. This makes the publicly assigned IP address knowable before a control
-	// plane machine is created.
-	addr := net.ParseIP(strings.TrimSuffix(ips.CIDR, `/31`))
-	addr[15] = addr[15] + 1
-	cc.SetIP(addr.String())
-
-	// set the control plane endpoint
-	// default port for the kube-apiserver is 6443
-	cc.SetControlPlaneEndpoint(addr.String(), 6443)
-
-	// mark the cluster ready
-	cc.SetReady()
 
 	return noRequeue, nil
 }

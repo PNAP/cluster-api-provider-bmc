@@ -257,7 +257,7 @@ func (r *BMCMachineReconciler) reconcileCreate(ctx context.Context, mc *MachineC
 	}
 
 	createBody, err := json.Marshal(request)
-	log.Info("Request object is   **************" + string(createBody))
+	log.Info("Request object FROM machine controller is   **************" + string(createBody))
 	if err != nil {
 		return noRequeue, err
 	}
