@@ -129,7 +129,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 
 	remoteClient, err := GetRemoteClient(ctx, cl, clusterKey)
 	if err != nil {
-		mc.Eventf(`Normal`, "Getting remote client failed. %v", fmt.Sprintln(err), mc.Machine.Name)
+		mc.Eventf(`Normal`, "FailureNodeRef", "Getting remote client failed. %s", fmt.Sprintln(err))
 		return
 	}
 	// Retrieve the remote node
@@ -140,7 +140,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 		Name:      nodeName,
 	}
 	if err := remoteClient.Get(ctx, nodeKey, node); err != nil {
-		mc.Eventf(`Normal`, "Getting node failed.: %v", fmt.Sprintln(err), mc.Machine.Name)
+		mc.Eventf(`Normal`, "FailureNodeRef", "Getting node failed.: %s", fmt.Sprintln(err))
 		return
 	}
 
@@ -153,19 +153,20 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 		}
 		//log.Info("Infrastructure provider reporting spec.providerID, Kubernetes node is now available", machine.Spec.InfrastructureRef.Kind, klog.KRef(machine.Spec.InfrastructureRef.Namespace, machine.Spec.InfrastructureRef.Name), "providerID", *machine.Spec.ProviderID, "Node", klog.KRef("", machine.Status.NodeRef.Name))
 		//r.recorder.Event(machine, corev1.EventTypeNormal, "SuccessfulSetNodeRef", machine.Status.NodeRef.Name)
-		mc.Event(`Normal`, "SuccessfulSetNodeRef", mc.BMCMachine.Status.NodeRef.Name)
+		mc.Event(`Normal`, "SuccessNodeRef", mc.BMCMachine.Status.NodeRef.Name)
 	}
 	// Update the node's Spec.ProviderID
 	patchHelper, err := patch.NewHelper(node, remoteClient)
 	if err != nil {
-		mc.Eventf(`Normal`, "failed to create patchHelper for the workload cluster node %s", fmt.Sprintln(err), nodeName)
+		mc.Eventf(`Normal`, "FailureNodeRef", "failed to create patchHelper for the workload cluster node %s", fmt.Sprintln(err))
 		return
 	}
 
 	node.Spec.ProviderID = *mc.BMCMachine.Spec.ProviderID
 	err = patchHelper.Patch(ctx, node)
 	if err != nil {
-		mc.Eventf(`Normal`, "failed to patch the remote workload cluster node %s's spec.providerID", fmt.Sprintln(err), nodeName)
+		mc.Eventf(`Normal`, "FailureNodeRef", "failed to patch the remote workload cluster node %s", fmt.Sprintln(err))
+		return
 	}
 }
 
