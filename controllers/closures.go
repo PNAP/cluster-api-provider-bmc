@@ -121,31 +121,17 @@ func (mc *MachineContext) SetBMCStatus(s string) {
 	mc.BMCMachine.Status.BMCStatus = string(s)
 }
 func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
-	//nodeUid := types.UID(mc.BMCMachine.Status.BMCServerID)
 
-	/* clusterKey := types.NamespacedName{
+	clusterKey := types.NamespacedName{
 		Namespace: mc.Cluster.Namespace,
 		Name:      mc.Cluster.Name,
 	}
-	*/
-	//var e error
-	var rClient = mc.K8sClient
-	/* for i := 0; i < 10; i++ {
-		remoteClient, err := GetRemoteClient(ctx, cl, clusterKey)
-		if err != nil {
-			mc.Eventf(`Normal`, "Getting remote cleint failed. Requeuing: %v", fmt.Sprintln(err), mc.Machine.Name)
-			e = err
-			rClient = mc.K8sClient
-		} else {
-			rClient = remoteClient
-			break
-		}
+
+	remoteClient, err := GetRemoteClient(ctx, cl, clusterKey)
+	if err != nil {
+		mc.Eventf(`Normal`, "Getting remote client failed. %v", fmt.Sprintln(err), mc.Machine.Name)
+		return
 	}
-	if e != nil {
-		mc.Event(`Normal`, "Controlplane endpoint not yet responding.", mc.Machine.Name)
-		rClient = mc.K8sClient
-		//return
-	} */
 	// Retrieve the remote node
 	nodeName := mc.Machine.Name
 	node := &corev1.Node{}
@@ -153,7 +139,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 		Namespace: "",
 		Name:      nodeName,
 	}
-	if err := rClient.Get(ctx, nodeKey, node); err != nil {
+	if err := remoteClient.Get(ctx, nodeKey, node); err != nil {
 		mc.Eventf(`Normal`, "Getting node failed.: %v", fmt.Sprintln(err), mc.Machine.Name)
 		return
 	}
@@ -169,15 +155,18 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 		//r.recorder.Event(machine, corev1.EventTypeNormal, "SuccessfulSetNodeRef", machine.Status.NodeRef.Name)
 		mc.Event(`Normal`, "SuccessfulSetNodeRef", mc.BMCMachine.Status.NodeRef.Name)
 	}
-	/* if mc.Machine.Status.NodeRef == nil {
-		mc.Machine.Status.NodeRef = &corev1.ObjectReference{
-			APIVersion: corev1.SchemeGroupVersion.String(),
-			Kind:       "Node",
-			Name:       mc.GetHostname(),
-			UID:        nodeUid,
-		}
-		mc.Event(`Normal`, "SuccessfulSetNodeRef-Machine", mc.BMCMachine.Status.NodeRef.Name)
-	} */
+	// Update the node's Spec.ProviderID
+	patchHelper, err := patch.NewHelper(node, remoteClient)
+	if err != nil {
+		mc.Eventf(`Normal`, "failed to create patchHelper for the workload cluster node %s", fmt.Sprintln(err), nodeName)
+		return
+	}
+
+	node.Spec.ProviderID = *mc.BMCMachine.Spec.ProviderID
+	err = patchHelper.Patch(ctx, node)
+	if err != nil {
+		mc.Eventf(`Normal`, "failed to patch the remote workload cluster node %s's spec.providerID", fmt.Sprintln(err), nodeName)
+	}
 }
 
 func (mc *MachineContext) GetBMCStatus() string {
