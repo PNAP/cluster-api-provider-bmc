@@ -129,7 +129,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 
 		remoteClient, err := GetRemoteClient(ctx, cl, clusterKey)
 		if err != nil {
-			mc.Eventf(`Normal`, "FailureNodeRef", "Getting remote client failed. %s", fmt.Sprintln(err))
+			mc.Eventf(`Warning`, "FailureNodeRef", "Getting remote client failed. %s", fmt.Sprintln(err))
 			return
 		}
 		// Retrieve the remote node
@@ -140,7 +140,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 			Name:      nodeName,
 		}
 		if err := remoteClient.Get(ctx, nodeKey, node); err != nil {
-			mc.Eventf(`Normal`, "FailureNodeRef", "Getting node failed.: %s", fmt.Sprintln(err))
+			mc.Eventf(`Warning`, "FailureNodeRef", "Getting node failed.: %s", fmt.Sprintln(err))
 			return
 		}
 
@@ -158,14 +158,14 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 		// Update the node's Spec.ProviderID
 		patchHelper, err := patch.NewHelper(node, remoteClient)
 		if err != nil {
-			mc.Eventf(`Normal`, "FailureNodeRef", "failed to create patchHelper for the workload cluster node %s", fmt.Sprintln(err))
+			mc.Eventf(`Warning`, "FailureNodeRef", "failed to create patchHelper for the workload cluster node %s", fmt.Sprintln(err))
 			return
 		}
 
 		node.Spec.ProviderID = *mc.BMCMachine.Spec.ProviderID
 		err = patchHelper.Patch(ctx, node)
 		if err != nil {
-			mc.Eventf(`Normal`, "FailureNodeRef", "failed to patch the remote workload cluster node %s", fmt.Sprintln(err))
+			mc.Eventf(`Warning`, "FailureNodeRef", "failed to patch the remote workload cluster node %s", fmt.Sprintln(err))
 			return
 		}
 	}
