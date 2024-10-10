@@ -62,7 +62,7 @@ spec:
     - echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
     - echo 10 | sudo tee /proc/sys/kernel/panic
     - curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    - echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${KUBERNETES_VERSION}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    - echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${KUBERNETES_VERSION%.*}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
     - sudo apt-get -y update
     - sudo apt-get install -y kubelet kubeadm kubectl
     - sudo apt-get -y update
@@ -162,7 +162,7 @@ spec:
       - echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
       - echo 10 | sudo tee /proc/sys/kernel/panic
       - curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-      - echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${KUBERNETES_VERSION}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+      - echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${KUBERNETES_VERSION%.*}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
       - sudo apt-get -y update
       - sudo apt-get install -y kubelet kubeadm kubectl
       - sudo apt-get -y update

@@ -133,7 +133,7 @@ func (mc *MachineContext) SetNodeRef(ctx context.Context, cl client.Client) {
 			return
 		}
 		// Retrieve the remote node
-		nodeName := mc.Machine.Name
+		nodeName := mc.GetHostname()
 		node := &corev1.Node{}
 		nodeKey := types.NamespacedName{
 			Namespace: "",
