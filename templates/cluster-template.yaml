@@ -67,6 +67,11 @@ spec:
     - sudo apt-get install -y kubelet kubeadm kubectl
     - sudo apt-get -y update
     - sudo swapoff -a
+    - sudo mkdir /etc/containerd
+    - sudo containerd config default | sudo tee /etc/containerd/config.toml
+    - sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+    - service containerd restart
+    - service kubelet restart
     - echo "preKubeadmCommands finished"
     initConfiguration:
       nodeRegistration:
@@ -162,6 +167,11 @@ spec:
       - sudo apt-get install -y kubelet kubeadm kubectl
       - sudo apt-get -y update
       - sudo swapoff -a
+      - sudo mkdir /etc/containerd
+      - sudo containerd config default | sudo tee /etc/containerd/config.toml
+      - sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+      - service containerd restart
+      - service kubelet restart
       - echo "preKubeadmCommands finished"
       joinConfiguration:
         nodeRegistration:
