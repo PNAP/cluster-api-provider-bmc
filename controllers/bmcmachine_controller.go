@@ -599,7 +599,7 @@ func (r *BMCMachineReconciler) BMCClusterToBMCMachines(ctx context.Context) hand
 				result = append(result, ctrl.Request{
 					NamespacedName: client.ObjectKey{
 						Namespace: machine.Namespace,
-						Name:      machine.Spec.InfrastructureRef.Name}})
+						Name:      machine.Name}})
 			}
 		}
 		return result
