@@ -239,11 +239,12 @@ func (r *BMCMachineReconciler) reconcileCreate(ctx context.Context, mc *MachineC
 		OSConfiguration:       OSConfiguration{CloudInit: CloudInit{UserData: string(encodedBootstrap)}},
 	}
 
-	if mc.IsControlPlaneMachine() {
+	//do not to assign control plane ip to specific server try to use kube-vip and bgp
+	/* if mc.IsControlPlaneMachine() {
 		// if its a control plane machine then add the public network configuration
-		// if control plane && ipid == `` then we have a problem
 		ipid := mc.GetClusterIPAllocationID()
 		if len(ipid) <= 0 {
+		// if control plane && ipid == `` then we have a problem
 			log.Info(`Cluster address block is not yet ready`)
 			return noRequeue, nil
 		}
@@ -254,7 +255,7 @@ func (r *BMCMachineReconciler) reconcileCreate(ctx context.Context, mc *MachineC
 			},
 		}
 	}
-
+	*/
 	createBody, err := json.Marshal(request)
 	if err != nil {
 		return noRequeue, err
