@@ -302,7 +302,7 @@ func (r *BMCClusterReconciler) reconcileSynchronize(ctx context.Context, cc *Clu
 	} else {
 		log.Info(`No change in status`)
 	}
-	if cc.IsStatusEqual(StatusAssigned) && !cc.IsReady() {
+	if (cc.IsStatusEqual(StatusAssigned) || cc.IsStatusEqual(StatusNotAssigned)) && !cc.IsReady() {
 		cc.SetReady()
 	}
 	return requeueAfter5Min, nil

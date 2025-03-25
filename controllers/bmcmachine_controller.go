@@ -98,6 +98,7 @@ var (
 	StatusPoweredOn      = `powered-on`
 	StatusError          = `error`
 	StatusAssigned       = `assigned`
+	StatusNotAssigned    = `unassigned`
 )
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
