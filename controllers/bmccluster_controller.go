@@ -302,7 +302,7 @@ func (r *BMCClusterReconciler) reconcileSynchronize(ctx context.Context, cc *Clu
 	} else {
 		log.Info(`No change in status`)
 	}
-	if (cc.IsStatusEqual(StatusAssigned) || cc.IsStatusEqual(StatusNotAssigned)) && !cc.IsReady() {
+	if ((cc.IsStatusEqual(StatusAssigned) && cc.BMCCluster.Spec.VIPManager == bmcv1.NONE) || (cc.IsStatusEqual(StatusNotAssigned) && cc.BMCCluster.Spec.VIPManager == bmcv1.KUBEVIP)) && !cc.IsReady() {
 		cc.SetReady()
 	}
 	return requeueAfter5Min, nil

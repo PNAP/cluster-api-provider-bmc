@@ -41,6 +41,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/pkg/errors"
+	"github.com/pnap/cluster-api-provider-bmc/api/v1beta1"
 	bmcv1 "github.com/pnap/cluster-api-provider-bmc/api/v1beta1"
 )
 
@@ -240,12 +241,12 @@ func (r *BMCMachineReconciler) reconcileCreate(ctx context.Context, mc *MachineC
 		OSConfiguration:       OSConfiguration{CloudInit: CloudInit{UserData: string(encodedBootstrap)}},
 	}
 
-	//do not to assign control plane ip to specific server try to use kube-vip and bgp
-	/* if mc.IsControlPlaneMachine() {
+	//do not to assign control plane ip to specific server, if using kube-vip and bgp
+	if mc.IsControlPlaneMachine() && mc.BMCCluster.Spec.VIPManager == v1beta1.NONE {
 		// if its a control plane machine then add the public network configuration
 		ipid := mc.GetClusterIPAllocationID()
 		if len(ipid) <= 0 {
-		// if control plane && ipid == `` then we have a problem
+			// if control plane && ipid == `` then we have a problem
 			log.Info(`Cluster address block is not yet ready`)
 			return noRequeue, nil
 		}
@@ -256,7 +257,7 @@ func (r *BMCMachineReconciler) reconcileCreate(ctx context.Context, mc *MachineC
 			},
 		}
 	}
-	*/
+
 	createBody, err := json.Marshal(request)
 	if err != nil {
 		return noRequeue, err
