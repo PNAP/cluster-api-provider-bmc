@@ -105,8 +105,8 @@ type Tag struct {
 type VIPMANAGER string
 
 const (
-	NONE    VIPMANAGER = `none`
-	KUBEVIP VIPMANAGER = `kube-vip`
+	NONE    VIPMANAGER = `NONE`
+	KUBEVIP VIPMANAGER = `KUBEVIP`
 )
 
 func init() {

@@ -308,7 +308,7 @@ func (r *BMCClusterReconciler) reconcileSynchronize(ctx context.Context, cc *Clu
 		cc.SetReady()
 	}
 
-	if cc.IsStatusEqual(StatusNotAssigned) && string(cc.BMCCluster.Spec.VIPManager) == string(bmcv1.KUBEVIP) && !cc.IsReady() {
+	if cc.IsStatusEqual(StatusNotAssigned) && cc.BMCCluster.Spec.VIPManager == bmcv1.KUBEVIP && !cc.IsReady() {
 		log.Info("infrastructure set to ready, vip manager is kube-vip.")
 		cc.SetReady()
 	}
