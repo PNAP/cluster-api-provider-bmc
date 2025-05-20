@@ -75,6 +75,8 @@ spec:
                 - ubuntu/bionic
                 - ubuntu/focal
                 - ubuntu/jammy
+                - proxmox/bullseye
+                - proxmox/proxmox8
                 type: string
               providerID:
                 description: To be set after the BMC server is created. Required by
