@@ -343,10 +343,10 @@ func (r *BMCClusterReconciler) reconcileDelete(ctx context.Context, cc *ClusterC
 func (r *BMCClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
 	_, err := ctrl.NewControllerManagedBy(mgr).
 		For(&bmcv1.BMCCluster{}).
-		WithEventFilter(predicates.ResourceNotPaused(r.Scheme, ctrl.LoggerFrom(ctx))).
+		WithEventFilter(predicates.ResourceNotPaused(mgr.GetScheme(), ctrl.LoggerFrom(ctx))).
 		Watches(&clusterv1.Cluster{},
 			handler.EnqueueRequestsFromMapFunc(util.ClusterToInfrastructureMapFunc(ctx, bmcv1.GroupVersion.WithKind(`BMCCluster`), mgr.GetClient(), &bmcv1.BMCCluster{})),
-			builder.WithPredicates(predicates.ClusterUnpaused(r.Scheme, ctrl.LoggerFrom(ctx)))).
+			builder.WithPredicates(predicates.ClusterUnpaused(mgr.GetScheme(), ctrl.LoggerFrom(ctx)))).
 		Build(r)
 	if err != nil {
 		return errors.Wrapf(err, `error creating cluster controller`)
